@@ -5,8 +5,8 @@ from PIL import Image
 import numpy as np
 
 def comparison():
-    # Load the original OpenCLIP model
-    model_path_openclip = "hf-hub:Marqo/marqo-fashionCLIP"  # Your OpenCLIP model path
+    # Load the original OpenCLIP model to convert ()
+    model_path_openclip = "hf-hub:Marqo/marqo-fashionCLIP"
     model_openclip, preprocess_train, preprocess_val = open_clip.create_model_and_transforms(model_path_openclip)
     tokenizer_openclip = open_clip.get_tokenizer(model_path_openclip)
 
@@ -24,7 +24,7 @@ def comparison():
     image_tensor_openclip = preprocess_val(image).unsqueeze(0)  # Preprocessing for OpenCLIP
 
     # Tokenize the text for both models
-    texts = ["a photo of a red shoe", "a photo of a black shoe", "a hat"]
+    texts = ["a photo of a red shoe", "a photo of a black shoe"]
     text_tensor_openclip = tokenizer_openclip(texts)
 
     # Hugging Face preprocessing
@@ -58,4 +58,3 @@ def comparison():
     print("OpenCLIP Label probs:", text_probs_openclip.tolist())
     print("HF CLIP Label probs:", text_probs_hf.tolist())
     
-comparison()

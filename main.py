@@ -18,15 +18,13 @@ def download_assets(your_converted_model_folder):
     hf_hub_download(repo_id="Marqo/marqo-fashionCLIP", filename="open_clip_pytorch_model.bin", local_dir=your_existing_model_folder)
     
     # Create output folder if it doesn't exist
-    if not os.path.exists(your_converted_model_folder):
-        os.makedirs(your_converted_model_folder)
+    # if not os.path.exists(your_converted_model_folder):
+    #     os.makedirs(your_converted_model_folder)
             
-    hf_hub_download(repo_id="Marqo/marqo-fashionCLIP", filename="tokenizer.json", local_dir=your_converted_model_folder)
-    hf_hub_download(repo_id="Marqo/marqo-fashionCLIP", filename="preprocessor_config.json", local_dir=your_converted_model_folder)
-    
+    # hf_hub_download(repo_id="Marqo/marqo-fashionCLIP", filename="tokenizer.json", local_dir=your_converted_model_folder)
+    # hf_hub_download(repo_id="Marqo/marqo-fashionCLIP", filename="preprocessor_config.json", local_dir=your_converted_model_folder)
 
 def main():
-    
     # First download assets needed
     download_assets("converted_hf_model")
      

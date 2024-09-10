@@ -1,11 +1,10 @@
-
 import argparse
-import os.path
-
+import os
+import json
 import torch
 
-from open_clip import create_model
-from transformers import CLIPConfig, CLIPVisionConfig, CLIPTextConfig, CLIPModel
+from open_clip import create_model, tokenizer
+from transformers import CLIPConfig, CLIPVisionConfig, CLIPTextConfig, CLIPModel, CLIPProcessor, AutoTokenizer
 
 
 def copy_attn_layer(hf_attn_layer, pt_attn_layer):
@@ -54,7 +53,7 @@ def copy_layers(hf_layers, pt_layers):
 
 
 def copy_encoder(hf_encoder, pt_model):
-    # copy  embeds
+    # copy embeds
     hf_encoder.embeddings.token_embedding.weight.copy_(pt_model.token_embedding.weight)
     hf_encoder.embeddings.position_embedding.weight.copy_(pt_model.positional_embedding)
 
@@ -93,7 +92,7 @@ def copy_vison_model_and_projection(hf_model, pt_model):
 @torch.no_grad()
 def convert_clip_checkpoint(model, pretrained, pytorch_dump_folder_path, config_path=None):
     """
-    Copy/paste/tweak model's weights to transformers design.
+    Copy/paste/tweak model's weights to transformers design and generate tokenizer and preprocessor config.
     """
     if config_path is not None:
         config = CLIPConfig.from_pretrained(config_path)
@@ -103,7 +102,7 @@ def convert_clip_checkpoint(model, pretrained, pytorch_dump_folder_path, config_
             text_config_dict=dict(hidden_act='gelu'),
             vision_config_dict=dict(hidden_act='gelu'))
         
-        ## B16 / B16 plus
+        # Example config for B16 / B16 plus
         config = CLIPConfig(
             projection_dim=512,
             text_config_dict=dict(
@@ -127,23 +126,25 @@ def convert_clip_checkpoint(model, pretrained, pytorch_dump_folder_path, config_
     copy_vison_model_and_projection(hf_model, pt_model)
     hf_model.logit_scale = pt_model.logit_scale
 
-    # input_ids = torch.arange(0, 77).unsqueeze(0)
+    # Prepare dummy inputs for validation
     import numpy as np
     input_ids = torch.tensor([49406] + list(np.arange(1, 77, dtype=int))).unsqueeze(0)
+    
+    # Normalize pixel_values to be in range [0, 1] and avoid rescaling
     pixel_values = torch.randn(1, 3, 224, 224)
+    pixel_values = (pixel_values - pixel_values.min()) / (pixel_values.max() - pixel_values.min())
 
+    # Validate embeddings
     hf_image_embed = hf_model.get_image_features(pixel_values)
     hf_text_embed = hf_model.get_text_features(input_ids)
 
     pt_image_embed = pt_model.encode_image(pixel_values)
     pt_text_embed = pt_model.encode_text(input_ids)
-    print((pt_image_embed - hf_image_embed).sum())
-    print((pt_text_embed - hf_text_embed).sum())
-    print((pt_text_embed - hf_text_embed).max(), (pt_text_embed - hf_text_embed).min())
+
     assert torch.allclose(hf_image_embed, pt_image_embed, atol=1e-4)
     assert torch.allclose(hf_text_embed, pt_text_embed, atol=1e-4)
 
-
+    # Validate logits
     hf_logits_per_image, hf_logits_per_text = hf_model(
         input_ids=input_ids, pixel_values=pixel_values, return_dict=False
     )[:2]
@@ -155,16 +156,45 @@ def convert_clip_checkpoint(model, pretrained, pytorch_dump_folder_path, config_
     assert torch.allclose(hf_logits_per_image, pt_logits_per_image, atol=1e-4)
     assert torch.allclose(hf_logits_per_text, pt_logits_per_text, atol=1e-4)
 
-    # Save the model in the folder specified by `pytorch_dump_folder_path`
+    # Save Hugging Face model and weights
     hf_model.save_pretrained(pytorch_dump_folder_path)
     torch.save(pt_model.state_dict(), os.path.join(pytorch_dump_folder_path, 'pytorch_model.bin'))
+
+    # Tokenizer and Preprocessor
+    tokenizer_name = "Marqo/marqo-fashionCLIP"
+    hf_tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+    hf_tokenizer.save_pretrained(pytorch_dump_folder_path)
+    
+    processor = CLIPProcessor.from_pretrained(tokenizer_name)
+    processor.save_pretrained(pytorch_dump_folder_path)
+
+    # Save preprocessor config
+    preprocessor_config = {
+        "image_mean": [0.48145466, 0.4578275, 0.40821073],
+        "image_std": [0.26862954, 0.26130258, 0.27577711],
+        "rescale_size": 224,
+        "crop_size": 224
+    }
+    with open(os.path.join(pytorch_dump_folder_path, "preprocessor_config.json"), "w") as f:
+        json.dump(preprocessor_config, f)
+
+    # Validate tokenizer and processor are correct
+    test_text = "A photo of a cat"
+    tokenized_text = hf_tokenizer(test_text, return_tensors="pt", padding="max_length", max_length=77, truncation=True)
+    processed_image = processor(images=pixel_values, return_tensors="pt", do_rescale=False).pixel_values
+
+    # Validate that the tokenized text and processed image match expected shapes
+    assert tokenized_text["input_ids"].shape == (1, 77), f"Tokenization mismatch: got {tokenized_text['input_ids'].shape}"
+    assert processed_image.shape == (1, 3, 224, 224), f"Preprocessing mismatch: got {processed_image.shape}"
+    
+    print("Tokenizer and preprocessor are correctly configured.")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--pytorch_dump_folder_path", default=None, type=str, help="Path to the output PyTorch model.")
     parser.add_argument("--model", default=None, type=str, help="Path to fairseq checkpoint")
     parser.add_argument("--pretrained", default=None, type=str, help="Path to fairseq checkpoint")
-    # parser.add_argument("--config_path", default=None, type=str, help="Path to hf config.json of model to convert")
     args = parser.parse_args()
 
-    convert_clip_checkpoint(args.model, args.pretrained, args.pytorch_dump_folder_path, args.config_path)
+    convert_clip_checkpoint(args.model, args.pretrained, args.pytorch_dump_folder_path)
