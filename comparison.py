@@ -2,7 +2,6 @@ import torch
 from transformers import CLIPProcessor, CLIPModel
 import open_clip
 from PIL import Image
-import numpy as np
 
 # Load the original OpenCLIP model to convert
 model_path_openclip = "hf-hub:Marqo/marqo-fashionCLIP"
@@ -53,3 +52,17 @@ text_probs_hf = (100.0 * image_features_hf @ text_features_hf.T).softmax(dim=-1)
 
 print("OpenCLIP Label probs:", text_probs_openclip.tolist())
 print("HF CLIP Label probs:", text_probs_hf.tolist())
+
+# Compute cosine similarity between OpenCLIP and HF CLIP features
+cosine_similarity_image = torch.nn.functional.cosine_similarity(image_features_openclip, image_features_hf, dim=-1)
+cosine_similarity_text = torch.nn.functional.cosine_similarity(text_features_openclip, text_features_hf, dim=-1)
+
+print(f"Cosine similarity of image features: {cosine_similarity_image.mean().item()}")
+print(f"Cosine similarity of text features: {cosine_similarity_text.mean().item()}")
+
+# Compute logits comparison
+logits_per_image_openclip = image_features_openclip @ text_features_openclip.T
+logits_per_image_hf = image_features_hf @ text_features_hf.T
+
+logits_diff = torch.abs(logits_per_image_openclip - logits_per_image_hf).max()
+print(f"Max difference in logits: {logits_diff.item()}")
