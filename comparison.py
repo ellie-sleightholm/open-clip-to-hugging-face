@@ -14,16 +14,13 @@ model_path_hf = "./converted_hf_model"
 hf_model = CLIPModel.from_pretrained(model_path_hf)
 hf_processor = CLIPProcessor.from_pretrained(model_path_hf)
 
-# Load the converted Hugging Face model in Sentence Transformers
-# st_model = SentenceTransformer(modules=[hf_model])
-
 # Preprocess the image
-image_path = "images/fashion-hippo.png"
+image_path = "images/t-shirt.jpg"
 image = Image.open(image_path)
 image_tensor_openclip = preprocess_val(image).unsqueeze(0)
 
 # Tokenize the text for both models
-texts = ["a photo of a red shoe", "a photo of a black shoe"]
+texts = ["a photo of a red shoe", "a photo of a black shoe", "a cat"]
 text_tensor_openclip = tokenizer_openclip(texts)
 
 # Hugging Face preprocessing
