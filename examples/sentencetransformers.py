@@ -12,7 +12,7 @@ model = SentenceTransformer(modules=[clip])
 img_emb = model.encode(Image.open('images/hat.png'))
 
 # Encode text descriptions
-text_emb = model.encode(['Two dogs in the snow', 'A cat on a table', 'A picture of London at night', 'a hat'])
+text_emb = model.encode(["a photo of a red shoe", "a photo of a black shoe", "a hat"])
 
 # Compute cosine similarities 
 cos_scores = util.cos_sim(img_emb, text_emb)
