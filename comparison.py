@@ -4,7 +4,7 @@ import open_clip
 from PIL import Image
 import numpy as np
 
-# Load the original OpenCLIP model to convert ()
+# Load the original OpenCLIP model to convert
 model_path_openclip = "hf-hub:Marqo/marqo-fashionCLIP"
 model_openclip, preprocess_train, preprocess_val = open_clip.create_model_and_transforms(model_path_openclip)
 tokenizer_openclip = open_clip.get_tokenizer(model_path_openclip)
@@ -15,12 +15,12 @@ hf_model = CLIPModel.from_pretrained(model_path_hf)
 hf_processor = CLIPProcessor.from_pretrained(model_path_hf)
 
 # Preprocess the image
-image_path = "images/t-shirt.jpg"
+image_path = "images/polo-shirt.jpg"
 image = Image.open(image_path)
 image_tensor_openclip = preprocess_val(image).unsqueeze(0)
 
 # Tokenize the text for both models
-texts = ["a photo of a red shoe", "a photo of a black shoe", "a hat"]
+texts = ["a photo of a red shoe", "a photo of a black shoe", "a hat", "a pink shirt"]
 text_tensor_openclip = tokenizer_openclip(texts)
 
 # Hugging Face preprocessing

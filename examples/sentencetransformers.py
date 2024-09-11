@@ -4,7 +4,6 @@ from PIL import Image
 
 # Load CLIP model
 model_path_hf = "./converted_hf_model"
-
 clip = models.CLIPModel(model_path_hf)
 model = SentenceTransformer(modules=[clip])
 

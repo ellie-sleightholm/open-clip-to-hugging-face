@@ -11,7 +11,7 @@ To perform the conversion yourself, run `main.py`. This will do the following:
 
 Once the new model has been saved in the directory `converted_hf_model`, we can use it for simple examples. 
 
-### Hugging Face
+### `transformers`
 ```python
 import torch
 from transformers import CLIPProcessor, CLIPModel
@@ -48,7 +48,7 @@ print("HF CLIP Label probs:", text_probs_hf.tolist())
 # HF CLIP Label probs: [[2.927805567431996e-11, 3.824342442726447e-08, 1.0]]
 ```
 
-### Sentence Transformer
+### `sentence-transformers`
 ```python
 from sentence_transformers import SentenceTransformer, util, models
 from transformers import CLIPProcessor, CLIPModel
@@ -56,7 +56,6 @@ from PIL import Image
 
 # Load CLIP model
 model_path_hf = "./converted_hf_model"
-
 clip = models.CLIPModel(model_path_hf)
 model = SentenceTransformer(modules=[clip])
 
