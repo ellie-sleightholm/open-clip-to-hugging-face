@@ -6,14 +6,14 @@ import open_clip
 from PIL import Image
 import numpy as np
 from huggingface_hub import hf_hub_download
-from huggingface_hub import snapshot_download
 
 def download_assets():
     # Create folder for the existing model
     your_existing_model_folder = "marqoFashionCLIP"
     if not os.path.exists(your_existing_model_folder):
         os.makedirs(your_existing_model_folder)
-            
+    
+    # Download open_clip_pytorch_model.bin needed for conversion
     hf_hub_download(repo_id="Marqo/marqo-fashionCLIP", filename="open_clip_pytorch_model.bin", local_dir=your_existing_model_folder)
     
 def main():
