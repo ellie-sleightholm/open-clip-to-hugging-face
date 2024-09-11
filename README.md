@@ -1,15 +1,15 @@
 # Convert Open-Clip to Hugging Face
 
-This repository converts an `open_clip` model into a Hugging Face `transformer` model that can then be used within `transformers` and `sentence-transformers`. 
+This repository converts an `open_clip` model into a Hugging Face `transformer` model that can then be used within `transformers` and `sentence-transformers`. For this repository we use `Marqo/marqo-fashionCLIP` but you can amend the `main.py` script to convert your own model. 
 
 To perform the conversion yourself, run `main.py`. This will do the following:
-* Create a folder called `marqoFashionCLIP` and then download the `open_clip_pytorch_model.bin` file directly from the `marqo-fashionCLIP` Hugging Face model repository.
+* Create a folder called `marqoFashionCLIP` and then download the [`open_clip_pytorch_model.bin`](https://huggingface.co/Marqo/marqo-fashionCLIP/blob/main/open_clip_pytorch_model.bin) file directly from the `marqo-fashionCLIP` Hugging Face model repository
 * Use this `.bin` file to convert the model into Hugging Face architecture
-* This new model will be saved in a folder called `converted_hf_model`
+* This new model will be saved in a folder called `converted_hf_model`.
 
 ## Comparison
 
-Once the new model has been saved in the directory `converted_hf_model`, we can use it for simple examples. 
+Once the new model has been saved in the directory `converted_hf_model`, we can use it for simple examples. Theres a `comparison.py` file that performs a simple comparison between the two models.
 
 ### `transformers`
 ```python
