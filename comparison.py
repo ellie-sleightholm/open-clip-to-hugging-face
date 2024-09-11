@@ -20,7 +20,7 @@ image = Image.open(image_path)
 image_tensor_openclip = preprocess_val(image).unsqueeze(0)
 
 # Tokenize the text for both models
-texts = ["a photo of a red shoe", "a photo of a black shoe", "a hat", "a pink shirt"]
+texts = ["a photo of a red shoe", "a photo of a black shoe"]
 text_tensor_openclip = tokenizer_openclip(texts)
 
 # Hugging Face preprocessing
